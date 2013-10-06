@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+ 
+  <!-- <script rel="javascript/text"  href="{{ url_for('static' , filename='d3.v3.js') }}" ></script>-->
+<script src="../static/d3.v3.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}">
+ <!-- Custom styles for this template -->
+    <link href="{{ url_for('static' , filename='theme.css') }}" rel="stylesheet">
+
+    <style type="text/css">
+    html,  body {
+        padding-top: 10px;
+        padding-bottom: 20px;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+div.tooltip {   
+  position: absolute;           
+  text-align: center;           
+  width: 240px;                  
+  //height: 240px;                 
+  padding: 2px;             
+  font: 10px sans-serif;        
+  background: lightsteelblue;   
+  border: 0px;      
+  border-radius: 8px;           
+  pointer-events: none;         
+}
+
+      /* Custom container */
+      .container-narrow {
+        margin: 0 auto;
+        max-width: 800px;
+      }
+      .container-narrow > hr {
+        margin: 10px 0;
+      }
+
+      /* Main marketing message and sign up button */
+      .jumbotron {
+        margin: 60px 0;
+        text-align: center;
+      }
+      .jumbotron h1 {
+        font-size: 72px;
+        line-height: 1;
+      }
+      .jumbotron .btn {
+        font-size: 21px;
+        padding: 14px 24px;
+      }
+
+      /* Supporting marketing content */
+      .marketing {
+        margin: 60px 0;
+      }
+      .marketing p + h4 {
+        margin-top: 28px;
+      }
+
+	.postingtable {
+	}
+	
+	.d3visual {
+		margin-top:-100;
+    }
+
+	ul.d3visual li {
+		float:left;
+		list-style:none;
+		text-decoration:none;
+	}
+	
+	.fightbootstrap {
+		padding-bottom:50px;
+	}
+	
+	#bigbubbles {
+		margin-left:10px;
+		width:100px;
+		height:100px;
+	}
+	
+	.fightfooter {
+		height:560px;
+		width:800px;
+		margin-left:-30px;
+	}
+circle {
+    stroke: #fff;
+}
+    </style>
+</head>
+
+
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" >
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+	    
+            <li class="active"><a href="{{ url_for('home') }}">JobsScores</a></li>
+            <li><a href="{{ url_for('howitworks') }}">How it works?</a></li>
+           <li><a href="{{ url_for('contact') }}">Contact</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+
+    <div class="container">
+      <div class="starter-template">
+		   <h1> Why?</h1><br>
+
+         <div  class="lead" style="float:left;"><font face="comic
+	   sans ms"><p align="justify">
+	   Finding jobs, especially the right jobs is a long
+	   and tedious process. You start by typing search keywords in your favorite
+	   job search sites, you get a list of jobs that contain those
+	   words. Then when you browse the listing, you find most jobs
+	   are only marginally relevant to you (or your skills), but
+	   occationally you find one or two jobs that sounds really
+	   interesting, and you tell yourself 'thats me!'.<br><br>
+	   Jobsscores saves your time by finding the right jobs for
+	   you. We use your resume, look through the job postings, and
+	   find the jobs that matches your skill sets. Each posting
+	   get a score out of 100, with score=100 means perfect match.</p>
+           <br><br>
+	   <h1> How the scoring is done?</h1><br><p align="justify">
+	   The scoring takes into account what skill sets you have and
+	   what skills are desired for a particular job. It also takes
+	   into account what is the relative importnce of those skills
+	   are in general for that particular area. This means if you
+	   match 4 out of 8 required skills, that does not necessarily
+	   mean the matching score is 50, it can less or greater than
+	   50 depending the importance of the matched skills.
+	  </p>
+	   </font></div></div></div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{{ url_for('static', filename='jquery.js') }}"></script>
+    <script src="{{ url_for('static',filename='bootstrap.min.js') }}"></script>
+         <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='offcanvas.css')}}" >
+    <!-- Custom styles for this template -->
+    <link href="{{ url_for('static', filename='starter-template.css') }}" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="{{url_for('static',filename='bootstrap-theme.min.css')}}" rel="stylesheet">
+ 
+    <!-- Custom styles for this template -->
+    <link href="theme.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]-->
+      <script src="{{ url_for('static', filename='html5shiv.js') }}"></script>
+      <script src="{{ url_for('static', filename='respond.min.js') }}"></script>
+    <script  src="{{ url_for('static', filename='jquery.min.js')}}"></script>
+
+    <script type="text/javascript" src="{{ url_for('static',filename='bootstrap.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='d3.v3.min.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='tooltip.js')}}"></script>
+	   
+</body>
+	   </html>

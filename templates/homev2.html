@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+ 
+  <!-- <script rel="javascript/text"  href="{{ url_for('static' , filename='d3.v3.js') }}" ></script>-->
+<script src="../static/d3.v3.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}">
+ <!-- Custom styles for this template -->
+    <link href="{{ url_for('static' , filename='theme.css') }}" rel="stylesheet">
+
+    <style type="text/css">
+    html,  body {
+        padding-top: 10px;
+        padding-bottom: 20px;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+div.tooltip {   
+  position: absolute;           
+  text-align: center;           
+  width: 240px;                  
+  //height: 240px;                 
+  padding: 2px;             
+  font: 10px sans-serif;        
+  background: lightsteelblue;   
+  border: 0px;      
+  border-radius: 8px;           
+  pointer-events: none;         
+}
+
+      /* Custom container */
+      .container-narrow {
+        margin: 0 auto;
+        max-width: 800px;
+      }
+      .container-narrow > hr {
+        margin: 10px 0;
+      }
+
+      /* Main marketing message and sign up button */
+      .jumbotron {
+        margin: 60px 0;
+        text-align: center;
+      }
+      .jumbotron h1 {
+        font-size: 72px;
+        line-height: 1;
+      }
+      .jumbotron .btn {
+        font-size: 21px;
+        padding: 14px 24px;
+      }
+
+      /* Supporting marketing content */
+      .marketing {
+        margin: 60px 0;
+      }
+      .marketing p + h4 {
+        margin-top: 28px;
+      }
+
+	.postingtable {
+	}
+	
+	.d3visual {
+		margin-top:-100;
+    }
+
+	ul.d3visual li {
+		float:left;
+		list-style:none;
+		text-decoration:none;
+	}
+	
+	.fightbootstrap {
+		padding-bottom:50px;
+	}
+	
+	#bigbubbles {
+		margin-left:10px;
+		width:100px;
+		height:100px;
+	}
+	
+	.fightfooter {
+		height:560px;
+		width:800px;
+		margin-left:-30px;
+	}
+circle {
+    stroke: #fff;
+}
+    </style>
+
+
+       <script>
+	     function copyText(id)
+	     {
+             $("#gotit").html('');
+             $("#tryagain").html('');
+             $("#tryagain1").html('');
+
+              var clicked_id= document.getElementById(id).value;                 
+	      var url = "/analyze";
+$.post(url, {'jobQuery':clicked_id}, cback);
+ 
+	     };
+       </script>
+       <script>
+           // make the table of results (only the top 20)
+           function makeTable(results) {
+	       // var words = results['top20words'];
+                var words=results['items'];
+               
+	        var html = '<table width="100%" class="table table-striped" style="background-color:LightCyan" cellspacing="1"><col width="10%"><col width="60%"><col width="20%"><col width="10%">'+
+	                   '<thead style="background-color:LightCoral"><tr>'+
+	                   '<th><font style="color:green; font-size:30px;">Company</font> </th>'+
+			   '<th><font style="color:green; font-size:30px;">Job</font> </th>'+
+	                   '<th><font style="color:green; font-size:30px;">Keywords</font> </th>'+
+	                   '<th><font style="color:green; font-size:30px;">Score</font></th>'+
+	                   '</font></tr></thead><tbody>';
+	        for (var i=0; i < words.length; i++) {
+		        html += '<tr>';
+		        html += '<td align="left"><font face="comic sans ms" size=5>';
+		        html += words[i].company;
+		        html += '</font></td>';
+		        html += '<td  align="left"><font face="comic sans ms" size=5>';
+		        html += words[i].jobtitle+'</font>'+'<br><font size=4>'+words[i].jobdescription;
+		        html += '</font></td>';
+		        html += '<td align="left"><font face="comic sans ms" size=4>';			 html+=words[i].jobwords+'<br><font   style="color:green">'+words[i].matchwords+'</font>';
+		        html += '</font></td>';
+		        html += '<td align="left"><font size=8>';
+		        html += words[i].compfact;
+		        html += '</tr>';
+                     }
+           html += '</tbody></table>';
+	   $("#resultstable").html(html);
+	   };
+      </script>
+	   <script>
+	   function vis(results){
+
+			$("svg").remove();
+
+		    var w = 800,
+		        h = 600,
+		        m = 0,
+		        center = {x:(w)/2, y:h/2},
+		        t = {minutes : 1, hour:60, hours:60, day:1440, days:1440},
+	   
+		        gravity  = -0.02,
+		        damper   = 0.03,
+		        friction = 0.9,
+		        force = d3
+		            .layout
+			.force()
+			.size([ w-m, h-m ]),
+		        svg = d3         //container
+			.select("#chart")
+			.append("svg")
+			.attr("height", h + "px")
+			.attr("width", w + "px"),
+	                circles,
+                         color = d3.scale.category10();
+	               
+                   var div = d3.select("body").append("div")   
+                             .attr("class", "tooltip")               
+                        .style("opacity", 0);
+
+				terms = results.items;
+
+				// RANGE OF SIZE FOR CIRCLES ---> use for COUNT
+				rrr = d3.scale.sqrt()
+				.domain([ d3.min(terms, function(d) { return d.compfact; }),
+				          d3.max(terms, function(d) { return d.compfact; }) ])
+				.range([ 10, 20 ])  // NORMALIZE COUNTS FROM 10 TO 100
+		        .clamp(true);   // HARD BOUNDS
+	   		r1 = d3.scale.sqrt()
+				.domain([ d3.min(terms, function(d) { return d.compfact; }),
+				          d3.max(terms, function(d) { return d.compfact; }) ])
+				.range([ 20, 70 ])  // NORMALIZE COUNTS FROM 10 TO 100
+		        .clamp(true);   // HARD BOUNDS
+
+
+
+		        // LAST NUMBER (2.5) CONTROLS CLOSENESS OF CIRCLES, //HIGHER = CLOSER
+			    g = function(d) { return -rrr(d) * rrr(d) / 2.5; };
+
+                  	   force.nodes( terms );
+
+ 
+			  var node = svg.selectAll(".node")
+			      .data(force.nodes())
+			    .enter().append("g")
+			      .attr("class", "node");
+
+			  node.append("circle")
+	              .attr("r", function(d) { return r1( d.compfact ); })
+				  .style("fill", function(d, i) { return color(i % 6);}).style("opacity",0.2)
+	   .on("mouseover", function(d) {      
+            div.transition()        
+                .duration(200)      
+                .style("opacity", .9);      
+                 div.html("<font face='Arial' size=4>"+d.company+"</font><br>"+
+                     "<font face='comic sans ms' size=4>" +"<font style='color:blue'>"+"Score: "+d.compfact+"</font><br>"+"<font style='color:black'>"+d.jobwords+"<br></font><font style='color:green'>"+d.matchwords+"</font><br>"
+	   )
+                .style("left", (d3.event.pageX) + "px")     
+                .style("top", (d3.event.pageY-10) + "px");
+            //div.tooltip.height(10*d.jobwords.length+"px");
+            })                  
+        .on("mouseout", function(d) {       
+            div.transition()        
+                .duration(500)      
+                .style("opacity", 0);   
+        });
+	   
+	   //'#2E8AE6';}); // 6B7CE0
+
+			  node.append("text")
+			      .attr("dy", "0.3em")
+				  .style("text-anchor", "middle")
+				  .text(function(d) { return d.company; })
+				  .style("font-size", function(d) {return rrr(d.compfact);})
+	   .style("fill","black");
+
+			        d3.selectAll(".node")
+				.transition()
+				.delay(function(d, i) { return i * 10; })
+				.duration( 1000 );
+
+			            force
+			               .gravity(gravity)
+                                     //.charge(function(d, i) { return i ? 0 : -2000; })
+			               .charge( function(d) { return g( d.compfact ); })
+			               .friction(friction)
+			               .on("tick", function(e) {
+force.nodes().forEach(function(d) {
+					    d.x = d.x + (center.x - d.x) * (damper + 0.02) * e.alpha;
+					    d.y = d.y + (center.y - d.y) * (damper + 0.02) * e.alpha;
+				    	});
+						//generator(e.alpha);
+
+			               node
+			 	           .attr("transform", function(d) { 
+				                                   return "translate(" + d.x + "," + d.y + ")"; 
+				                                 });
+					    }).start();
+
+}
+</script>
+      <script>
+	 function cback(results) {
+            if (results['items']) {
+	   vis(results);
+	   makeTable(results);
+           username(results['firstname']);
+            }
+         };
+       </script>
+<script>
+function username(firstname){
+  var html ='<div><li>'
+     html += '<font size=3> Hello ' +firstname+' !';
+         html+= '</font></li></div>';
+	 $("#username").html(html);
+};
+</script>
+       <script>
+	  function Linkedin(id)
+	   {
+              if (id=="linkedinauth"){
+	        var url = "/linkedinAuth";
+                $.post(url, {'linkprof':id}, function(d){window.open(d);});
+              }
+              if (id=="linkedincode"){
+                var code = document.getElementById(id).value;
+                document.getElementById(id).value = "";
+                var url = "/linkedinAuth";
+                //alert(code)
+                $.post(url, {'linkcode':code}, gotprofile); 
+              }
+	  };
+       </script>
+<script>
+function gotprofile(message) {
+  if (message=="gotit") {
+     $("#tryagain").html('');
+     $("#tryagain1").html('');
+ var html ='<hr><div class="lead">'
+     html += '<font size=4> We got your Linkedin profile,... Now...';
+     html+= '</font></div><hr>'
+     $("#gotit").html(html);
+   }
+  if (message=="tryagain") {
+     $("#gotit").html('');
+     $("#tryagain1").html('');
+     var html ='<hr><div class="lead">'
+     html += '<font size=4> Something is wrong, click on...Get my Linkedin profile... again';
+     html+= '</font></div><hr>'
+     $("#tryagain").html(html);
+     }
+  if (message=="tryagain1") {
+     $("#gotit").html('');
+     $("#tryagain").html('');
+     var html ='<hr><div class="lead">'
+     html += '<font size=4> Looks like your id, skills or summary are not available, check your Linkedin settings';
+     html+= '</font></div><hr>'
+     $("#tryagain1").html(html);
+     }    
+     
+     };
+</script>
+</head>
+     
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" >
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+	    
+            <li class="active"><a href="{{ url_for('home') }}">JobsScores</a></li>
+            <li><a href="{{ url_for('howitworks') }}">How it works?</a></li>
+           <li><a href="{{ url_for('contact') }}">Contact</a></li>
+	   <li class="active"><a  id="username"></a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+ 
+    <div class="container">
+      <div class="starter-template">
+	<h1 style="margin-top:-28px"><font face="comic sans ms"> Find jobs most relevant to you</font></h1>
+         <div  class="lead" style="background-color:LightCoral; float:center;"><font face="comic sans ms"> Use your cv or your Linkedin profile to find the jobs most relevant for you<br></font></div>
+
+      <div class="container">
+	<a form action="/" method="post">
+	<input type="submit" onclick="Linkedin(this.id)" class="btn btn-lg btn-primary" id="linkedinauth" value='Get my Linkedin profile'></a>
+	        </form>
+
+	<input id="linkedincode"  type="text" class="input-xlarge" size="32"   name="linkedincode" onKeyPress="if (event.keyCode == 13) {Linkedin(this.id);}" placeholder="enter the 5 digits Linkedin Code" &#160;&#160; /><br>
+      </div>
+      
+	<div class="container" id="gotit"></div>
+	<div class="container" id="tryagain"></div>
+	<div class="container" id="tryagain1"></div>
+	<div class="container" id="winop"></div>
+
+	<p class="lead"><h2><font face="comic sans ms"> Choose a job sector</p></h2></font>
+
+    <a form action="/" method="post"> 
+  <input type="submit" onclick="copyText(this.id)" class="btn btn-lg btn-primary" id="data_scientist" value= 'Data Scientist' &raquo;/> </a>  
+
+   <input type="submit" onclick="copyText(this.id)" class="btn btn-lg btn-primary" id="data_analyst" value="Data Analyst" &raquo; /></a>
+
+   <input type="submit" onclick="copyText(this.id)" class="btn btn-lg btn-primary" id="software_engineer"  value="Software Engineer" &raquo;/></a>
+    
+    </form>     
+    </div><!-- /.container -->
+    </div>
+    <div class="container">
+	<div id="chart"  style="float:center; width:100%;"></div>
+     </div>
+   <div class="panel panel-title"
+     style="float:left; width:100%;"><div class="col-lg-6" id="resultstable"></div></div>
+
+
+
+     <div>
+       &copy; Suman Bhattacharya;
+       Job data powered by 
+       <b><a href="http://www.indeed.com" target="_blank">Indeed.com</a></b> and profile data by 
+       <b><a href="http://www.linkedin.com" target="_blank">Linkedin.com</a></b>
+
+     </div>
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{{ url_for('static', filename='jquery.js') }}"></script>
+    <script src="{{ url_for('static',filename='bootstrap.min.js') }}"></script>
+         <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='offcanvas.css')}}" >
+    <!-- Custom styles for this template -->
+    <link href="{{ url_for('static', filename='starter-template.css') }}" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="{{url_for('static',filename='bootstrap-theme.min.css')}}" rel="stylesheet">
+ 
+    <!-- Custom styles for this template -->
+    <link href="theme.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]-->
+      <script src="{{ url_for('static', filename='html5shiv.js') }}"></script>
+      <script src="{{ url_for('static', filename='respond.min.js') }}"></script>
+    <script  src="{{ url_for('static', filename='jquery.min.js')}}"></script>
+
+    <script type="text/javascript" src="{{ url_for('static',filename='bootstrap.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='d3.v3.min.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='tooltip.js')}}"></script>
+
+  </body>
+ </html>
